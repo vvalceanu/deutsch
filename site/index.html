@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projekte</title>
+<meta name="theme-color" content="#15503A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap">
+<style>
+  :root {
+    --orchard: #15503A;
+    --orchard-deep: #0E3A29;
+    --cream: #FFF7E8;
+    --sun: #FFC43D;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 32px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--orchard);
+    background-image: radial-gradient(circle at 50% 0%, #1C6549 0%, var(--orchard) 45%, var(--orchard-deep) 100%);
+    color: var(--cream);
+    font-family: Nunito, "Segoe UI", system-ui, sans-serif;
+  }
+
+  main { width: 100%; max-width: 420px; }
+
+  h1 {
+    margin: 0 0 24px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -.01em;
+  }
+
+  ul { margin: 0; padding: 0; list-style: none; }
+  li + li { margin-top: 12px; }
+
+  a {
+    display: block;
+    padding: 18px 20px;
+    border-radius: 16px;
+    background: var(--cream);
+    color: var(--orchard-deep);
+    text-decoration: none;
+    box-shadow: 0 5px 0 rgba(0, 0, 0, .3);
+    transition: transform .09s ease;
+  }
+
+  a:active { transform: translateY(5px); box-shadow: 0 0 0 rgba(0, 0, 0, .3); }
+  a:focus-visible { outline: 4px solid var(--sun); outline-offset: 4px; }
+
+  .name { display: block; font-size: 1.2rem; font-weight: 800; }
+  .note { display: block; margin-top: 2px; font-size: .95rem; opacity: .7; }
+
+  @media (prefers-reduced-motion: reduce) {
+    a { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <h1>Projekte</h1>
+  <ul>
+    <li>
+      <a href="/woerter/">
+        <span class="name">Wörterspiel für Kinder</span>
+        <span class="note">Welches Wort ist richtig geschrieben?</span>
+      </a>
+    </li>
+  </ul>
+</main>
+
+</body>
+</html>

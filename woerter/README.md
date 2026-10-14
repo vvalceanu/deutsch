@@ -30,14 +30,16 @@ refills, storage. No dependencies; `node:test` ships with Node.
 
 ## Deploying
 
-Static files, no build step. The site is hosted on XXX at
-deutsch.xxx.com. Deploying is a push to GitHub, then one command:
+Static files, no build step. The site lives at **deutsch.xxx.com/woerter/**, one
+of several projects under that domain. Deploying is a push to GitHub, then one
+command:
 
     ssh <user>@<host> /home/private/deutsch/deploy.sh
 
 `deploy.sh`, at the repository root, pulls `main` into the clone in
-`/home/private` and copies the game into the document root. It is safe to run
-repeatedly.
+`/home/private` and copies the game into `/home/public/woerter`. It is safe to
+run repeatedly, and its `--delete` is scoped to that subdirectory, so sibling
+projects under `/home/public` are never touched.
 
 What it copies is an explicit allowlist: `index.html`, `style.css`, `words2.json`,
 `.htaccess` and `js/`. Everything else in this folder — the source PDFs, the
@@ -46,6 +48,19 @@ spelling notes, draft word lists, `tests/`, `package.json` — stays off the web
 it will not be published.
 
 Full setup, DNS and TLS steps are in the deployment doc.
+
+### The landing page
+
+`site/index.html` (repository root) is the page at **deutsch.xxx.com/**, listing
+the projects under that domain. It is deliberately *not* part of `deploy.sh`:
+that script's `--delete` is scoped to `/home/public/woerter`, and keeping it that
+way is what makes it safe to run while sibling projects share the document root.
+
+Install or update it by hand — it changes only when a project is added:
+
+    cp /home/private/deutsch/site/index.html /home/public/index.html
+
+Without it, the bare domain 404s, since NFSN serves no directory listings.
 
 ## Adding words
 

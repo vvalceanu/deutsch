@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wörter</title>
+<meta name="description" content="Welches Wort ist richtig geschrieben?">
+<meta name="theme-color" content="#15503A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<canvas id="sky" class="sky" aria-hidden="true"></canvas>
+
+<main class="board">
+
+  <header class="tally">
+    <div class="pips" id="pips" role="img" aria-label="Punkte bis zur nächsten Kirsche"></div>
+    <p class="cherries">
+      <svg class="cherry" viewBox="0 0 32 32" aria-hidden="true">
+        <path class="stem" d="M16 6.5C13.4 10 10.2 13.2 8.8 16.8"/>
+        <path class="stem" d="M16 6.5c2.6 3.2 4.9 6.1 6.1 9.4"/>
+        <path class="leaf" d="M16.2 6.6c1.3-2.7 4.4-3.7 7.1-2.7-1 2.9-4 4.4-7.1 2.7z"/>
+        <circle class="fruit" cx="8.4" cy="23" r="6"/>
+        <circle class="fruit" cx="22.6" cy="22" r="6"/>
+        <ellipse class="shine" cx="6.2" cy="21" rx="1.7" ry="1.1" transform="rotate(-32 6.2 21)"/>
+        <ellipse class="shine" cx="20.4" cy="20" rx="1.7" ry="1.1" transform="rotate(-32 20.4 20)"/>
+      </svg>
+      <span id="cherry-count" aria-label="Kirschen">0</span>
+    </p>
+  </header>
+
+  <p class="prompt" id="hint-def"></p>
+
+  <div class="choices" id="choices"></div>
+
+  <p class="hint-ro" id="hint-ro"></p>
+
+  <div class="advance">
+    <button type="button" class="next" id="next" aria-label="Weiter" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 12h12M12.5 6l6 6-6 6"/>
+      </svg>
+    </button>
+  </div>
+
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+
+</main>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

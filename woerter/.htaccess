@@ -1,0 +1,27 @@
+# Wörter — static files only, no build step.
+
+AddDefaultCharset UTF-8
+
+<IfModule mod_mime.c>
+  AddType application/json .json
+  AddType text/javascript .js
+</IfModule>
+
+# The word list and the page itself change; the rest can sit in cache.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|json)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# Development leftovers, in case the whole folder gets uploaded.
+<IfModule mod_authz_core.c>
+  <FilesMatch "^(package\.json|package-lock\.json)$">
+    Require all denied
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^tests/ - [F,L]
+</IfModule>

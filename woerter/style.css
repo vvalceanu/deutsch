@@ -1,0 +1,318 @@
+/* Wörter — a cherry orchard at night. The sky is dark so the fireworks read as
+   fireworks, the word tiles are the one bright surface, and everything else
+   stays quiet. */
+
+:root {
+  --orchard: #15503A;
+  --orchard-deep: #0E3A29;
+  --cream: #FFF7E8;
+  --leaf: #2E8B57;
+  --vermilion: #E04E2B;
+  --cherry: #C3153F;
+  --sun: #FFC43D;
+
+  --tile-drop: 6px;
+  --radius: 18px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--orchard);
+  background-image: radial-gradient(circle at 50% 0%, #1C6549 0%, var(--orchard) 45%, var(--orchard-deep) 100%);
+  color: var(--cream);
+  font-family: Nunito, "Segoe UI", system-ui, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* ---- the fireworks sky ----
+   Behind the board, not over it: a burst lasts about six seconds, and the word
+   the kid just got right has to stay readable for all of them. */
+
+.sky {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---- board ---- */
+
+.board {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 4vh, 36px);
+}
+
+/* ---- tally: pips on the left, cherries on the right ---- */
+
+.tally {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pips {
+  display: flex;
+  gap: 7px;
+}
+
+.pip {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 247, 232, .4);
+}
+
+.pip.filled {
+  background: var(--sun);
+  border-color: var(--sun);
+  box-shadow: 0 0 10px rgba(255, 196, 61, .6);
+}
+
+.pip.just-filled { animation: pop .34s ease-out; }
+
+@keyframes pop {
+  0%   { transform: scale(.4); }
+  55%  { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+.cherries {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.cherry {
+  width: 34px;
+  height: 34px;
+  flex: none;
+}
+
+.cherry .stem { fill: none; stroke: #6FBF8B; stroke-width: 2; stroke-linecap: round; }
+.cherry .leaf { fill: #6FBF8B; }
+.cherry .fruit { fill: var(--cherry); }
+.cherry .shine { fill: #fff; opacity: .45; }
+
+.cherries.minted { animation: mint .7s cubic-bezier(.2, 1.5, .4, 1); }
+
+@keyframes mint {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.45) rotate(-7deg); }
+  100% { transform: scale(1); }
+}
+
+/* ---- the choices: the hero of the screen ---- */
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.choice {
+  position: relative;
+  appearance: none;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--cream);
+  color: var(--orchard-deep);
+  box-shadow: 0 var(--tile-drop) 0 rgba(0, 0, 0, .35);
+  font-family: inherit;
+  font-size: clamp(1.5rem, 6vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: -.01em;
+  padding: clamp(18px, 4vw, 30px) 14px;
+  cursor: pointer;
+  transition: transform .09s ease, background-color .18s ease, color .18s ease;
+}
+
+.choice:active:not(:disabled) {
+  transform: translateY(var(--tile-drop));
+  box-shadow: 0 0 0 rgba(0, 0, 0, .35);
+}
+
+.choice:focus-visible {
+  outline: 4px solid var(--sun);
+  outline-offset: 4px;
+}
+
+.choice:disabled { cursor: default; }
+
+/* A glyph as well as a colour, so the signal survives colour blindness and
+   never gets confused with the cherry red. */
+.choice.correct,
+.choice.wrong { color: var(--cream); }
+
+.choice.correct { background: var(--leaf); }
+.choice.wrong { background: var(--vermilion); }
+
+.choice.correct::after,
+.choice.wrong::after {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.choice.correct::after { content: "✓"; }
+.choice.wrong::after { content: "✗"; }
+
+.choice.faded { opacity: .45; }
+
+.choice.wrong { animation: shake .34s ease-in-out; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-7px); }
+  75%      { transform: translateX(7px); }
+}
+
+/* ---- the prompt: the German definition, above the choices ----
+   Flags are set in CSS rather than markup so the JS can keep assigning plain
+   textContent. Escapes, not literal emoji, so the file's encoding never matters.
+   Note Windows renders no flag glyphs at all and shows "CH" / "RO" instead. */
+
+.prompt {
+  margin: 0 auto;
+  max-width: 34ch;
+  min-height: 2.6em;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgba(255, 247, 232, .95);
+}
+
+.hint-ro {
+  margin: 0;
+  min-height: 1.5em;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255, 247, 232, .68);
+}
+
+.prompt::before,
+.hint-ro::before {
+  margin-right: .45em;
+  font-size: .85em;
+  vertical-align: .05em;
+}
+
+.prompt::before { content: "\01F1E8\01F1ED"; }
+.hint-ro::before { content: "\01F1F7\01F1F4"; }
+
+/* ---- the only control ---- */
+
+.advance {
+  display: flex;
+  justify-content: center;
+  min-height: 76px;
+}
+
+.next {
+  appearance: none;
+  border: 0;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--sun);
+  color: var(--orchard-deep);
+  box-shadow: 0 var(--tile-drop) 0 rgba(0, 0, 0, .35);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform .09s ease;
+  animation: rise .3s ease-out;
+}
+
+/* `display: grid` above outranks the browser's own [hidden] rule, so say it again. */
+.next[hidden] { display: none; }
+
+.next svg {
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.next:active {
+  transform: translateY(var(--tile-drop));
+  box-shadow: 0 0 0 rgba(0, 0, 0, .35);
+}
+
+.next:focus-visible {
+  outline: 4px solid var(--cream);
+  outline-offset: 4px;
+}
+
+@keyframes rise {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* ---- announced to screen readers, invisible on screen ---- */
+
+.status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- trouble ---- */
+
+.trouble {
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--sun);
+}
+
+.trouble::before { content: none; }
+
+/* ---- one column on a phone ---- */
+
+@media (max-width: 420px) {
+  .choices { grid-template-columns: 1fr; gap: 11px; }
+  .choice { padding: 16px 12px; }
+  .cherry { width: 28px; height: 28px; }
+  .cherries { font-size: 1.3rem; }
+  .pip { width: 11px; height: 11px; gap: 5px; }
+  .next { width: 66px; height: 66px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

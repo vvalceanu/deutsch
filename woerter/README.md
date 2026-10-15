@@ -11,6 +11,21 @@ point, ten points become a cherry. Cherries are never spent and never capped, an
 they live in localStorage. A wrong pick costs nothing — it just shows the correct
 spelling and moves on when the kid presses the arrow.
 
+## Review lists
+
+Repetitio mater studiorum. A missed word goes onto the **bad list** and keeps
+coming back until it is answered correctly twice since its last miss; a miss in
+between sets the count back to zero. A word answered correctly goes onto the
+**correct list** and comes back once: right again and it is dropped, wrong and it
+moves to the bad list. Words that clear the bad list are dropped, not moved.
+
+Each next word comes from the bad list (30%), the correct list (20%) or the big
+list (50%). An empty list hands its share to the others in proportion, so with
+nothing to review every word comes from the big list.
+
+The lists hold spellings only, in localStorage under `woerter.review.v1`, apart
+from the score. The rules are pure functions in `js/review.js`.
+
 ## Running it
 
 ```sh
@@ -25,8 +40,8 @@ A web server is required: ES modules and `fetch` do not work over `file://`.
 node --test
 ```
 
-42 tests over the pure logic — scoring, the cherry rollover, choice building, batch
-refills, storage. No dependencies; `node:test` ships with Node.
+78 tests over the pure logic — scoring, the cherry rollover, choice building, batch
+refills, the review lists, storage. No dependencies; `node:test` ships with Node.
 
 ## Deploying
 
@@ -95,6 +110,11 @@ whole list and picks ten. When the real endpoint exists — its contract is "giv
 `sample()` call. The response shape is already identical, and nothing else changes:
 `js/queue.js` just asks for another batch whenever it runs dry.
 
+The review lists need the second half of the contract: "give me the details for
+word X". Today `loadWord()` fetches the list once, keeps it, and looks the word up;
+with the backend it becomes `/api/words/<word>`, returning one entry, or a 404 —
+mapped to `null` — for a word that is gone, which the queue then forgets.
+
 ## Layout
 
 ```
@@ -104,7 +124,8 @@ style.css         the orchard palette and layout
 words2.json       the word list
 js/score.js       scoring rules, pure
 js/challenge.js   builds the shuffled choices for one word
-js/queue.js       serves words, refills from a loader
+js/review.js      review lists: which words come back, pure
+js/queue.js       serves words: review or batch, refills from a loader
 js/storage.js     localStorage, degrades to memory when blocked
 js/words.js       the backend seam
 js/fireworks.js   canvas particle burst

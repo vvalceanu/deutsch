@@ -54,3 +54,52 @@ test('a loader that returns nothing fails loudly instead of hanging', async () =
   const queue = createQueue(async () => []);
   await assert.rejects(() => queue.next(), /no words/i);
 });
+
+// --- review ---
+
+/** Review storage held in a variable, so tests can see what was saved. */
+function memoryReview(initial = { bad: {}, correct: [] }) {
+  const state = { saved: initial };
+  return { state, storage: { load: () => state.saved, save: (r) => { state.saved = r; } } };
+}
+
+const entries = { Stuhl: { word: 'Stuhl', ro: 'scaun' }, Hund: { word: 'Hund', ro: 'câine' } };
+const lookup = async (word) => entries[word] ?? null;
+
+test('a roll in the bad list serves that word in full', async () => {
+  const { storage } = memoryReview({ bad: { Stuhl: 0 }, correct: [] });
+  const queue = createQueue(countingLoader().load, { reviewStorage: storage, loadWord: lookup, rng: () => 0 });
+  assert.deepEqual(await queue.next(), entries.Stuhl);
+});
+
+test('a roll in the big list serves from the batch', async () => {
+  const { storage } = memoryReview({ bad: { Stuhl: 0 }, correct: [] });
+  const queue = createQueue(countingLoader().load, { reviewStorage: storage, loadWord: lookup, rng: () => 0.99 });
+  assert.equal((await queue.next()).word, 'batch1-0');
+});
+
+test('with nothing to review, the word list is never looked up', async () => {
+  let lookups = 0;
+  const queue = createQueue(countingLoader().load, {
+    reviewStorage: memoryReview().storage,
+    loadWord: async () => { lookups += 1; return null; },
+    rng: () => 0,
+  });
+  await queue.next();
+  assert.equal(lookups, 0);
+});
+
+test('answers are recorded and saved', () => {
+  const { state, storage } = memoryReview();
+  const queue = createQueue(countingLoader().load, { reviewStorage: storage, loadWord: lookup });
+  queue.answered('Stuhl', false);
+  queue.answered('Hund', true);
+  assert.deepEqual(state.saved, { bad: { Stuhl: 0 }, correct: ['Hund'] });
+});
+
+test('a review word the list no longer has is forgotten and a batch word served', async () => {
+  const { state, storage } = memoryReview({ bad: { Gone: 0 }, correct: [] });
+  const queue = createQueue(countingLoader().load, { reviewStorage: storage, loadWord: lookup, rng: () => 0 });
+  assert.equal((await queue.next()).word, 'batch1-0');
+  assert.deepEqual(state.saved, { bad: {}, correct: [] });
+});

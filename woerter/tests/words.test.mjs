@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadBatch, sample, BATCH_SIZE } from '../js/words.js';
+import { loadBatch, loadWord, sample, BATCH_SIZE } from '../js/words.js';
 
 const twenty = Array.from({ length: 20 }, (_, i) => ({ word: `W${i}` }));
 
@@ -51,4 +51,28 @@ test('sampling draws a different order over repeated calls', () => {
   const orders = new Set();
   for (let i = 0; i < 25; i++) orders.add(sample(twenty, 5).map((w) => w.word).join());
   assert.ok(orders.size > 1, 'sampling looks deterministic');
+});
+
+test('loadWord finds the full entry for a spelling', async () => {
+  const entry = await loadWord('W7', { fetchFn: fakeFetch({ words: twenty }), cache: new Map() });
+  assert.deepEqual(entry, { word: 'W7' });
+});
+
+test('loadWord gives null for a word the list does not have', async () => {
+  assert.equal(await loadWord('Nope', { fetchFn: fakeFetch({ words: twenty }), cache: new Map() }), null);
+});
+
+test('loadWord fetches the list once and keeps it', async () => {
+  let calls = 0;
+  const fetchFn = async () => { calls += 1; return { ok: true, status: 200, json: async () => ({ words: twenty }) }; };
+  const cache = new Map();
+  await loadWord('W1', { fetchFn, cache });
+  await loadWord('W2', { fetchFn, cache });
+  assert.equal(calls, 1);
+});
+
+test('a failed loadWord fetch is tried again next time', async () => {
+  const cache = new Map();
+  await assert.rejects(() => loadWord('W1', { fetchFn: fakeFetch(null, { ok: false, status: 500 }), cache }));
+  assert.deepEqual(await loadWord('W1', { fetchFn: fakeFetch({ words: twenty }), cache }), { word: 'W1' });
 });

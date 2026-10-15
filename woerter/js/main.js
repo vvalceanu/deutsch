@@ -2,9 +2,9 @@
 
 import { createFireworks } from './fireworks.js';
 import { createQueue } from './queue.js';
-import { createStorage } from './storage.js';
+import { createReviewStorage, createStorage } from './storage.js';
 import { createGameUi } from './ui.js';
-import { loadBatch } from './words.js';
+import { loadBatch, loadWord } from './words.js';
 
 const elements = {
   pips: document.getElementById('pips'),
@@ -19,7 +19,10 @@ const elements = {
 
 createGameUi({
   elements,
-  queue: createQueue(() => loadBatch()),
+  queue: createQueue(() => loadBatch(), {
+    reviewStorage: createReviewStorage(),
+    loadWord: (word) => loadWord(word),
+  }),
   storage: createStorage(),
   fireworks: createFireworks(document.getElementById('sky')),
 }).start();

@@ -64,7 +64,10 @@ export function createGameUi({ elements, queue, storage, fireworks }) {
     const tiles = [...elements.choices.children];
     for (const tile of tiles) tile.disabled = true;
 
-    if (choice === challenge.word) {
+    const correct = choice === challenge.word;
+    queue.answered(challenge.word, correct);
+
+    if (correct) {
       button.classList.add('correct');
       for (const tile of tiles) if (tile !== button) tile.classList.add('faded');
       const result = scoreCorrect(score);

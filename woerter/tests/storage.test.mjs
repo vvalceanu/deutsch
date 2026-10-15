@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createStorage } from '../js/storage.js';
+import { createReviewStorage, createStorage } from '../js/storage.js';
+import { emptyReview } from '../js/review.js';
 import { emptyScore } from '../js/score.js';
 
 /** A stand-in for localStorage, backed by a Map. */
@@ -82,4 +83,52 @@ test('a localStorage that throws on access does not stop the game starting', () 
     if (original) Object.defineProperty(globalThis, 'localStorage', original);
     else delete globalThis.localStorage;
   }
+});
+
+// --- review lists ---
+
+test('a first-time player starts with nothing to review', () => {
+  const storage = createReviewStorage(fakeBackend(), 'review.test');
+  assert.deepEqual(storage.load(), emptyReview());
+});
+
+test('saved review lists come back on the next visit', () => {
+  const backend = fakeBackend();
+  createReviewStorage(backend, 'review.test').save({ bad: { Stuhl: 1 }, correct: ['Hund'] });
+  assert.deepEqual(createReviewStorage(backend, 'review.test').load(), {
+    bad: { Stuhl: 1 }, correct: ['Hund'],
+  });
+});
+
+test('review lists and the score do not overwrite each other', () => {
+  const backend = fakeBackend();
+  createReviewStorage(backend).save({ bad: { Stuhl: 1 }, correct: [] });
+  createStorage(backend).save({ cherries: 1, pips: 2, lifetimePoints: 12 });
+  assert.deepEqual(createReviewStorage(backend).load(), { bad: { Stuhl: 1 }, correct: [] });
+});
+
+test('unreadable review data starts the lists empty', () => {
+  const storage = createReviewStorage(fakeBackend({ 'review.test': '{not json' }), 'review.test');
+  assert.deepEqual(storage.load(), emptyReview());
+});
+
+test('malformed review entries are dropped, the good ones kept', () => {
+  const stored = JSON.stringify({
+    bad: { Stuhl: 'x', Tisch: 1, '': 0 },
+    correct: ['Hund', 7, '', 'Hund', 'Tisch'],
+  });
+  const storage = createReviewStorage(fakeBackend({ 'review.test': stored }), 'review.test');
+  assert.deepEqual(storage.load(), { bad: { Stuhl: 0, Tisch: 1 }, correct: ['Hund'] });
+});
+
+test('review lists of the wrong shape start empty', () => {
+  const stored = JSON.stringify({ bad: ['Stuhl'], correct: 'Hund' });
+  const storage = createReviewStorage(fakeBackend({ 'review.test': stored }), 'review.test');
+  assert.deepEqual(storage.load(), emptyReview());
+});
+
+test('blocked storage does not break review', () => {
+  const storage = createReviewStorage(hostileBackend, 'review.test');
+  assert.deepEqual(storage.load(), emptyReview());
+  assert.doesNotThrow(() => storage.save(emptyReview()));
 });

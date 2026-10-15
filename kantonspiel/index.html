@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Kantonspiel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --sky-top: #7EC8E3;
+            --sky-bottom: #D4EDFC;
+            --star-empty: #ccc;
+            --star-filled: #FFD700;
+            --btn-1: #FF8A65;
+            --btn-2: #4DD0E1;
+            --btn-3: #BA68C8;
+            --correct: #66BB6A;
+            --wrong: #EF5350;
+            --text: #37474F;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 70%, #B5DCAF 100%);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100dvh;
+            padding: 1rem 1rem 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 22vh;
+            background: #5B8C5A;
+            clip-path: polygon(0 55%,8% 28%,18% 52%,28% 18%,38% 46%,50% 8%,62% 42%,72% 14%,82% 44%,92% 24%,100% 50%,100% 100%,0 100%);
+            opacity: .45;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 15vh;
+            background: #4A7C42;
+            clip-path: polygon(0 62%,12% 38%,25% 58%,40% 22%,52% 50%,65% 18%,78% 48%,90% 28%,100% 52%,100% 100%,0 100%);
+            opacity: .35;
+            z-index: 0;
+        }
+
+        .game { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 480px; z-index: 1; }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: .5rem;
+        }
+
+        .title-group { display: flex; align-items: center; gap: .5rem; }
+        h1 { font-size: 1.8rem; font-weight: 700; }
+
+        .total-score {
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: rgba(255,255,255,.85);
+            padding: .35rem .8rem;
+            border-radius: 2rem;
+            white-space: nowrap;
+            transition: transform .3s;
+        }
+        .total-score.bump { animation: bump .35s ease; }
+
+        .stars { display: flex; gap: .5rem; margin-bottom: .6rem; }
+        .star {
+            font-size: 2.2rem;
+            color: var(--star-empty);
+            transition: color .3s, transform .3s;
+            line-height: 1;
+        }
+        .star.filled {
+            color: var(--star-filled);
+            text-shadow: 0 0 12px rgba(255,215,0,.5);
+            animation: starPop .4s cubic-bezier(.175,.885,.32,1.275);
+        }
+
+        .question { font-size: 1.25rem; font-weight: 600; margin-bottom: .5rem; text-align: center; }
+
+        .flag-card {
+            background: #fff;
+            border-radius: 1.2rem;
+            padding: 1.2rem;
+            box-shadow: 0 8px 28px rgba(0,0,0,.1);
+            margin-bottom: .8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity .25s, transform .25s;
+        }
+        .flag-card img { width: 170px; height: 170px; object-fit: contain; display: block; }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: .65rem;
+            width: 100%;
+            transition: opacity .25s;
+        }
+
+        .choice {
+            display: block;
+            width: 100%;
+            padding: .9rem 1.2rem;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.45rem;
+            font-weight: 600;
+            color: #fff;
+            border: none;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: transform .12s, box-shadow .12s, background .3s;
+            text-shadow: 0 2px 4px rgba(0,0,0,.15);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .choice:nth-child(1) { background: var(--btn-1); box-shadow: 0 4px 0 #E67350; }
+        .choice:nth-child(2) { background: var(--btn-2); box-shadow: 0 4px 0 #3BB8C4; }
+        .choice:nth-child(3) { background: var(--btn-3); box-shadow: 0 4px 0 #9B59B6; }
+
+        .choice:hover { transform: translateY(-2px); }
+        .choice:active { transform: translateY(2px); box-shadow: 0 1px 0 #999; }
+        .choice:disabled { cursor: default; pointer-events: none; opacity: .45; transition: transform .12s, box-shadow .12s, background .3s, opacity .3s; }
+        .choice:disabled.correct,
+        .choice:disabled.reveal { opacity: 1; }
+
+        .choice.correct { background: var(--correct) !important; box-shadow: 0 4px 0 #4CAF50 !important; animation: bounce .45s ease; }
+        .choice.wrong   { background: var(--wrong) !important;   box-shadow: 0 4px 0 #D32F2F !important; animation: shake .4s ease; }
+        .choice.reveal   { background: var(--correct) !important; box-shadow: 0 4px 0 #4CAF50 !important; }
+
+        /* Celebration */
+        .celebration { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; }
+        .celebration.active { display: flex; }
+        .celebration canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+        .celebration-content {
+            position: relative; z-index: 101;
+            text-align: center;
+            opacity: 0;
+            transform: scale(.85);
+            transition: opacity .5s ease, transform .5s ease;
+        }
+        .celebration-content.visible { opacity: 1; transform: scale(1); }
+
+        .celebration-text {
+            font-size: 2.6rem; font-weight: 700; color: #fff;
+            text-shadow: 0 4px 12px rgba(0,0,0,.4);
+            margin-bottom: .4rem;
+        }
+        .celebration-sub {
+            font-size: 1.4rem; font-weight: 600;
+            color: rgba(255,255,255,.9);
+            text-shadow: 0 2px 8px rgba(0,0,0,.3);
+            margin-bottom: 1.5rem;
+        }
+        .play-again {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 1.4rem; font-weight: 700;
+            padding: .9rem 2.2rem;
+            background: #fff; color: var(--text);
+            border: none; border-radius: 2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,.2);
+            transition: transform .12s;
+            touch-action: manipulation;
+        }
+        .play-again:hover { transform: scale(1.05); }
+        .play-again:active { transform: scale(.95); }
+
+        /* Keyframes */
+        @keyframes starPop  { 0%{transform:scale(1)} 50%{transform:scale(1.5)} 100%{transform:scale(1)} }
+        @keyframes bounce   { 0%,100%{transform:translateY(0)} 30%{transform:translateY(-10px)} 60%{transform:translateY(-4px)} }
+        @keyframes shake    { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+        @keyframes bump     { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
+
+        /* Responsive */
+        @media (min-height:780px) {
+            .flag-card { padding: 1.8rem; }
+            .flag-card img { width: 200px; height: 200px; }
+            h1 { font-size: 2.2rem; }
+            .star { font-size: 2.6rem; }
+            .choice { padding: 1rem 1.4rem; font-size: 1.6rem; }
+        }
+        @media (max-height:620px) {
+            .flag-card { padding: .7rem; margin-bottom: .4rem; }
+            .flag-card img { width: 120px; height: 120px; }
+            .header { margin-bottom: .2rem; }
+            .stars { margin-bottom: .3rem; }
+            .star { font-size: 1.7rem; }
+            .choice { padding: .6rem .8rem; font-size: 1.15rem; }
+            .question { font-size: 1.05rem; margin-bottom: .3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game">
+    <div class="header">
+        <div class="title-group">
+            <svg viewBox="0 0 32 32" width="34" height="34">
+                <rect width="32" height="32" rx="3" fill="#D52B1E"/>
+                <rect x="6" y="13" width="20" height="6" rx="1" fill="#fff"/>
+                <rect x="13" y="6" width="6" height="20" rx="1" fill="#fff"/>
+            </svg>
+            <h1>Kantonspiel</h1>
+        </div>
+        <div class="total-score" id="totalScore">&#11088; 0</div>
+    </div>
+
+    <div class="stars" id="stars">
+        <span class="star">&#9733;</span>
+        <span class="star">&#9733;</span>
+        <span class="star">&#9733;</span>
+        <span class="star">&#9733;</span>
+        <span class="star">&#9733;</span>
+    </div>
+
+    <p class="question">Welcher Kanton ist das?</p>
+
+    <div class="flag-card" id="flagCard">
+        <img id="flagImg" src="" alt="Kantonsflagge">
+    </div>
+
+    <div class="choices" id="choices">
+        <button class="choice"></button>
+        <button class="choice"></button>
+        <button class="choice"></button>
+    </div>
+</div>
+
+<div class="celebration" id="celebration">
+    <canvas id="fireworks"></canvas>
+    <div class="celebration-content" id="celebContent">
+        <div class="celebration-text">&#127881; Super! &#127881;</div>
+        <div class="celebration-sub">5 richtige Antworten!</div>
+        <button class="play-again" id="playAgain">Nochmal spielen!</button>
+    </div>
+</div>
+
+<script>
+const CANTONS = {
+    ag:'Aargau', ai:'Appenzell Innerrhoden', ar:'Appenzell Ausserrhoden',
+    be:'Bern', bl:'Basel-Landschaft', bs:'Basel-Stadt',
+    fr:'Freiburg', ge:'Genf', gl:'Glarus', gr:'Graub\u00fcnden',
+    ju:'Jura', lu:'Luzern', ne:'Neuenburg', nw:'Nidwalden',
+    ow:'Obwalden', sg:'St.\u00a0Gallen', sh:'Schaffhausen', so:'Solothurn',
+    sz:'Schwyz', tg:'Thurgau', ti:'Tessin', ur:'Uri',
+    vd:'Waadt', vs:'Wallis', zg:'Zug', zh:'Z\u00fcrich'
+};
+const KEYS = Object.keys(CANTONS);
+
+let current = '', last = '', score = 0;
+let total = parseInt(localStorage.getItem('kantonspiel_total') || '0');
+let locked = false;
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const flagImg     = $('#flagImg');
+const flagCard    = $('#flagCard');
+const choicesEl   = $('#choices');
+const buttons     = $$('.choice');
+const stars       = $$('.star');
+const totalEl     = $('#totalScore');
+const celebEl     = $('#celebration');
+const celebContent= $('#celebContent');
+const canvas      = $('#fireworks');
+const ctx         = canvas.getContext('2d');
+
+function shuffle(a) { for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]} return a; }
+function pick(arr, ex=[]) { const f=arr.filter(k=>!ex.includes(k)); return f[Math.random()*f.length|0]; }
+
+function updateTotal() { totalEl.textContent = '\u2B50 ' + total; }
+function bumpTotal() { totalEl.classList.remove('bump'); void totalEl.offsetWidth; totalEl.classList.add('bump'); }
+
+function newRound() {
+    locked = true;
+    flagCard.style.opacity = '0';
+    flagCard.style.transform = 'scale(.94)';
+    choicesEl.style.opacity = '0';
+
+    setTimeout(() => {
+        current = pick(KEYS, [last]);
+        last = current;
+        const w1 = pick(KEYS, [current]);
+        const w2 = pick(KEYS, [current, w1]);
+        const opts = shuffle([current, w1, w2]);
+
+        flagImg.src = 'flags/' + current + '.svg';
+        buttons.forEach((b, i) => {
+            b.dataset.key = opts[i];
+            b.textContent = CANTONS[opts[i]];
+            b.className = 'choice';
+            b.disabled = false;
+        });
+
+        flagCard.style.opacity = '1';
+        flagCard.style.transform = 'scale(1)';
+        choicesEl.style.opacity = '1';
+        locked = false;
+    }, 280);
+}
+
+function handleChoice(btn) {
+    if (locked) return;
+    locked = true;
+    buttons.forEach(b => b.disabled = true);
+
+    if (btn.dataset.key === current) {
+        btn.classList.add('correct');
+        stars[score].classList.add('filled');
+        score++;
+        total++;
+        localStorage.setItem('kantonspiel_total', total);
+        updateTotal();
+        bumpTotal();
+        setTimeout(score >= 5 ? celebrate : newRound, score >= 5 ? 800 : 1000);
+    } else {
+        btn.classList.add('wrong');
+        buttons.forEach(b => { if (b.dataset.key === current) b.classList.add('reveal'); });
+        setTimeout(newRound, 4000);
+    }
+}
+
+buttons.forEach(b => b.addEventListener('click', () => handleChoice(b)));
+
+// --- Fireworks ---
+let particles = [], fwRunning = false, launchTimer = null;
+const COLORS = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF6B9D','#C780FA','#45CFDD','#FF8A65'];
+
+function resizeCanvas() { canvas.width = innerWidth; canvas.height = innerHeight; }
+
+function burst() {
+    const x = Math.random() * canvas.width * .6 + canvas.width * .2;
+    const y = Math.random() * canvas.height * .4 + canvas.height * .1;
+    const col = COLORS[Math.random() * COLORS.length | 0];
+    const n = 30 + (Math.random() * 20 | 0);
+    for (let i = 0; i < n; i++) {
+        const a = Math.PI * 2 * i / n + (Math.random() - .5) * .4;
+        const sp = 2 + Math.random() * 4;
+        particles.push({ x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, c: col,
+            life: 1, decay: .008 + Math.random()*.012, sz: 2 + Math.random()*3 });
+    }
+}
+
+function fwLoop() {
+    if (!fwRunning && !particles.length) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(15,23,42,.85)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.vy += .04; p.y += p.vy; p.vx *= .99; p.life -= p.decay;
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.c;
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = p.c;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.sz * p.life, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+    requestAnimationFrame(fwLoop);
+}
+
+function celebrate() {
+    resizeCanvas();
+    celebEl.classList.add('active');
+    fwRunning = true;
+    particles = [];
+    burst();
+    let n = 0;
+    launchTimer = setInterval(() => { burst(); if (++n >= 10) { clearInterval(launchTimer); fwRunning = false; } }, 350);
+    setTimeout(() => celebContent.classList.add('visible'), 500);
+    fwLoop();
+}
+
+function resetGame() {
+    celebEl.classList.remove('active');
+    celebContent.classList.remove('visible');
+    fwRunning = false;
+    clearInterval(launchTimer);
+    particles = [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    score = 0;
+    stars.forEach(s => s.classList.remove('filled'));
+    newRound();
+}
+
+$('#playAgain').addEventListener('click', resetGame);
+window.addEventListener('resize', () => { if (celebEl.classList.contains('active')) resizeCanvas(); });
+
+updateTotal();
+newRound();
+</script>
+</body>
+</html>

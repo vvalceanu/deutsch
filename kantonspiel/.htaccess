@@ -1,0 +1,15 @@
+# Kantonspiel — static files only, no build step.
+
+AddDefaultCharset UTF-8
+
+<IfModule mod_mime.c>
+  AddType image/svg+xml .svg
+</IfModule>
+
+# The page changes; the flags do not and can sit in cache.
+# If the game ever gains data files (JSON, an API), give them no-cache here too.
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>

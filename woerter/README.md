@@ -37,7 +37,8 @@ command:
     ssh <user>@<host> /home/private/deutsch/deploy.sh
 
 `deploy.sh`, at the repository root, pulls `main` into the clone in
-`/home/private` and copies the game into `/home/public/woerter`. It is safe to
+`/home/private` and copies the game into `/home/public/woerter` (and Kantonspiel
+into `/home/public/kantonspiel`, beside it). It is safe to
 run repeatedly, and its `--delete` is scoped to that subdirectory, so sibling
 projects under `/home/public` are never touched.
 

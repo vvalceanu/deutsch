@@ -1,0 +1,452 @@
+/* Zahlenstrahl — a number line under a night sky. The sky is dark so the
+   fireworks read as fireworks; the number card is the one bright surface, the
+   line and its two marks come next, everything else stays quiet. */
+
+:root {
+  --night: #14213D;
+  --night-deep: #0B1428;
+  --cream: #FFF7E8;
+  --sun: #FFC43D;
+  --cherry: #C3153F;
+  --right: #3DDC97;
+  --wrong: #FF6B6B;
+
+  --radius: 18px;
+  --line-y: 58%;
+  --zone-gap: clamp(18px, 4vw, 40px);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--night);
+  background-image: radial-gradient(circle at 50% 0%, #22355E 0%, var(--night) 45%, var(--night-deep) 100%);
+  color: var(--cream);
+  font-family: Fredoka, Nunito, "Segoe UI", system-ui, sans-serif;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button { font-family: inherit; touch-action: manipulation; }
+
+/* ---- the fireworks sky, behind the board ---- */
+
+.sky {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---- board ---- */
+
+.board {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 960px;
+  height: 100%;
+  max-height: 680px;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: clamp(8px, 2.5vh, 24px);
+}
+
+/* ---- tally: pips and cherries on the left, the mode switch on the right ---- */
+
+.tally {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.score {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.pips { display: flex; gap: 6px; }
+
+.pip {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 247, 232, .4);
+}
+
+.pip.filled {
+  background: var(--sun);
+  border-color: var(--sun);
+  box-shadow: 0 0 10px rgba(255, 196, 61, .6);
+}
+
+.pip.just-filled { animation: pop .34s ease-out; }
+
+@keyframes pop {
+  0%   { transform: scale(.4); }
+  55%  { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+.cherries {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cherry { width: 32px; height: 32px; flex: none; }
+.cherry .stem { fill: none; stroke: #6FBF8B; stroke-width: 2; stroke-linecap: round; }
+.cherry .leaf { fill: #6FBF8B; }
+.cherry .fruit { fill: var(--cherry); }
+.cherry .shine { fill: #fff; opacity: .45; }
+
+.cherries.minted { animation: mint .7s cubic-bezier(.2, 1.5, .4, 1); }
+
+@keyframes mint {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.45) rotate(-7deg); }
+  100% { transform: scale(1); }
+}
+
+/* The mode switch is for the grown-up, so it keeps to the corner and stays dim
+   until touched. */
+
+.modes {
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 247, 232, .07);
+  opacity: .5;
+  transition: opacity .2s;
+}
+
+.modes:hover, .modes:focus-within { opacity: 1; }
+
+.modes button {
+  appearance: none;
+  border: 0;
+  width: 30px;
+  height: 26px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cream);
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modes button[aria-checked="true"] {
+  background: rgba(255, 247, 232, .85);
+  color: var(--night-deep);
+}
+
+.modes button:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+
+/* ---- the number ---- */
+
+.question {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.number {
+  min-width: 2.1em;
+  padding: .06em .32em;
+  border-radius: var(--radius);
+  background: var(--cream);
+  color: var(--night-deep);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, .35);
+  font-size: clamp(3rem, 17vh, 7.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.number.arrive { animation: arrive .3s ease-out; }
+
+@keyframes arrive {
+  from { transform: scale(.85); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.worth {
+  margin-top: 10px;
+  height: 14px;
+  display: flex;
+  gap: 5px;
+}
+
+.worth i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sun);
+  opacity: .75;
+}
+
+.gain {
+  position: absolute;
+  top: 10%;
+  left: calc(50% + 1.6em);
+  font-size: clamp(1.4rem, 6vh, 2.4rem);
+  font-weight: 700;
+  color: var(--sun);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gain.show { animation: rise 1.2s ease-out forwards; }
+
+@keyframes rise {
+  0%   { transform: translateY(12px); opacity: 0; }
+  20%  { transform: translateY(0); opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: translateY(-24px); opacity: 0; }
+}
+
+/* ---- the line: three tap zones, two marks between them ---- */
+
+.line {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--zone-gap);
+  height: clamp(110px, 32vh, 210px);
+}
+
+.axis {
+  position: absolute;
+  left: 0;
+  right: 14px;
+  top: var(--line-y);
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 3px;
+  background: var(--cream);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* the arrowhead: numbers grow to the right */
+.axis::after {
+  content: '';
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  border: 11px solid transparent;
+  border-left: 16px solid var(--cream);
+  border-right: 0;
+  transform: translateY(-50%);
+}
+
+.zone {
+  position: relative;
+  appearance: none;
+  border: 2px dashed rgba(255, 247, 232, .22);
+  border-radius: var(--radius);
+  background: rgba(255, 247, 232, .05);
+  color: var(--cream);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+
+.zone:hover:not(:disabled) { background: rgba(255, 247, 232, .12); border-color: rgba(255, 247, 232, .45); }
+.zone:active:not(:disabled) { transform: scale(.97); }
+.zone:focus-visible { outline: 4px solid var(--sun); outline-offset: 3px; }
+.zone:disabled { cursor: default; }
+
+.zone-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12%;
+  font-size: clamp(.85rem, 3.4vh, 1.2rem);
+  font-weight: 600;
+  opacity: .55;
+}
+
+.zone.correct {
+  background: rgba(61, 220, 151, .2);
+  border: 2px solid var(--right);
+}
+
+.zone.wrong {
+  background: rgba(255, 107, 107, .18);
+  border: 2px solid var(--wrong);
+  animation: shake .4s ease;
+}
+
+.zone.faded { opacity: .45; }
+.zone.correct .zone-label, .zone.wrong .zone-label { opacity: 0; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+/* the number, dropped onto the line where it belongs */
+.chip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - var(--line-y) + 14px);
+  padding: 0 .4em;
+  border-radius: 10px;
+  background: var(--sun);
+  color: var(--night-deep);
+  font-size: clamp(1.2rem, 6vh, 2rem);
+  font-weight: 700;
+  line-height: 1.3;
+  transform: translateX(-50%);
+  display: none;
+  z-index: 2;
+}
+
+/* the chip's pin, down to the line */
+.chip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 3px;
+  height: 14px;
+  margin-left: -1.5px;
+  background: var(--sun);
+}
+
+.zone.placed .chip { display: block; animation: drop .35s cubic-bezier(.2, 1.4, .4, 1); }
+
+@keyframes drop {
+  from { transform: translate(-50%, -30px); opacity: 0; }
+  to   { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* A mark sits in the middle of the gap between two zones: a tick across the
+   line, its value underneath. Three zones and two gaps put those middles a
+   sixth of a gap off the thirds. */
+.mark {
+  position: absolute;
+  top: var(--line-y);
+  width: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+#mark-left { left: calc(100% / 3 - var(--zone-gap) / 6); }
+#mark-right { left: calc(200% / 3 + var(--zone-gap) / 6); }
+
+.mark::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: -20px;
+  width: 6px;
+  height: 40px;
+  border-radius: 3px;
+  background: var(--cream);
+}
+
+.mark span {
+  position: absolute;
+  top: 26px;
+  left: 0;
+  transform: translateX(-50%);
+  padding: 0 .12em;
+  border-radius: 10px;
+  background: #15233F; /* the night just under the line, so the zone borders stop at the number */
+  font-size: clamp(1.6rem, 9vh, 3.2rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--cream);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- footer: what happened, and the way on ---- */
+
+.advance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 64px;
+}
+
+.status {
+  margin: 0;
+  font-size: clamp(1.1rem, 5vh, 1.6rem);
+  font-weight: 600;
+  text-align: center;
+}
+
+.status .math { color: var(--sun); white-space: nowrap; }
+
+.next {
+  appearance: none;
+  border: 0;
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--sun);
+  color: var(--night-deep);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, .35);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  animation: arrive .25s ease-out;
+}
+
+.next[hidden] { display: none; }
+.next svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.next:active { transform: translateY(5px); box-shadow: 0 0 0 rgba(0, 0, 0, .35); }
+.next:focus-visible { outline: 4px solid var(--cream); outline-offset: 4px; }
+
+/* ---- short screens: landscape phones ---- */
+
+@media (max-height: 460px) {
+  .board { gap: 6px; }
+  .cherry { width: 26px; height: 26px; }
+  .cherries { font-size: 1.2rem; }
+  .pip { width: 11px; height: 11px; }
+  .number { box-shadow: 0 4px 0 rgba(0, 0, 0, .35); }
+  .worth { margin-top: 6px; }
+  .mark::before { top: -14px; height: 28px; }
+  .mark span { top: 18px; }
+  .advance { min-height: 52px; }
+  .next { width: 52px; height: 52px; }
+  .next svg { width: 28px; height: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .gain.show { opacity: 1; }
+}

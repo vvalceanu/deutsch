@@ -7,7 +7,7 @@
 #
 # It pulls main into the clone in /home/private and copies each project into
 # its own subdirectory of /home/public -- woerter/ to <domain>/woerter/,
-# kantonspiel/ to <domain>/kantonspiel/ -- so the projects sit side by side
+# kantonspiel/ to <domain>/kantonspiel/, zahlenstrahl/ to <domain>/zahlenstrahl/ -- so the projects sit side by side
 # under the same document root.
 # Safe to run repeatedly: the pull is --ff-only and each copy is a full mirror.
 
@@ -54,5 +54,11 @@ publish kantonspiel \
   --include '/.htaccess' \
   --include '/flags/' \
   --include '/flags/*.svg'
+
+publish zahlenstrahl \
+  --include '/index.html' \
+  --include '/style.css' \
+  --include '/.htaccess' \
+  --include '/js/***'
 
 echo "Live: $(git -C "$REPO" rev-parse --short HEAD) $(git -C "$REPO" log -1 --format=%s)"
